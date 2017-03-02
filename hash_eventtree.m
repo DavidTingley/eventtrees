@@ -27,8 +27,14 @@ function [tree,siz,cumulativeUIDs] = hash_eventtree(varargin)
 %   - Add timestamps as an output variable (first or last spike in sequence)
 %   - add argument that is a shank list, so sequences must jump shanks?
 %   - other recommendations?
+%
+% This version of the eventtree's analysis utilizes a matlab Container.map object
+% to store sequence observations.  The advantage, being able to look for sequences 
+% of arbitrarily long lengths (8-30 realistically) 
+%
 % D.Levenstein and D.Tingley 2016
 
+warning('this function is experimental and maybe not be functioning (ha) correctly...')
 if nargin < 2
     error('not enough inputs');
 end

@@ -33,6 +33,7 @@ function [tree,counts,siz] = treeGPU(varargin)
 % cellseq = sparse2mat(repmat(numcells,mmax,1),seqID)
 %
 
+warning('this function is experimental and maybe not be functioning (ha) correctly...')
 if nargin < 2
     error('not enough inputs');
 end
