@@ -24,32 +24,44 @@ if ~exist('overlap','var')
     overlap = true;
 end
 
-if size(spiketimes,1) > size(spiketimes,2)
-    numspikes = length(vertcat(spiketimes{:}));
-else        %what is this? supposed to be accounting for row v. column?
-    numspikes = length(vertcat(spiketimes{:}));
-end
-numcells = length(spiketimes);
-
 %Make numspikes x 2 vector, (:,1) is spiketimes (:,2) is cell numbers
-spikesmat = zeros(numspikes,2);
-indtrack = 1;
-for c = 1:numcells
-    cellspikes = length(spiketimes{c});
-    spikesmat(indtrack:(indtrack+cellspikes-1),1) = spiketimes{c};
-    spikesmat(indtrack:(indtrack+cellspikes-1),2) = c.*ones(size(spiketimes{c}));
-    indtrack = indtrack + cellspikes;
+if iscell(spiketimes)
+    
+    if size(spiketimes,1) > size(spiketimes,2)
+        numspikes = length(vertcat(spiketimes{:}));
+    else
+        numspikes = length(vertcat(spiketimes{:}));
+    end
+    numcells = length(spiketimes);
+   
+    spikesmat = zeros(numspikes,2);
+    indtrack = 1;
+    for c = 1:numcells
+        cellspikes = length(spiketimes{c});
+        spikesmat(indtrack:(indtrack+cellspikes-1),1) = spiketimes{c};
+        spikesmat(indtrack:(indtrack+cellspikes-1),2) = c.*ones(size(spiketimes{c}));
+        indtrack = indtrack + cellspikes;
+    end
+elseif isnumeric(spiketimes) && size(spiketimes,2)==2
+    spikesmat = spiketimes;
+    numspikes = size(spikesmat,1);
+    numcells = length(unique(spikesmat(:,2)));
+else
+    display('Something is wrong with you spiketimes input')
 end
 
 %sort spikesmat
 [~,sort_stime] = sort(spikesmat(:,1));
 spikesmat = spikesmat(sort_stime,:);
 
+cellnums = unique(spikesmat(:,2));
+maxcell = max(cellnums);
+
 % set up siz variable which mat2sparse.m uses to access the correct sparse
 % coordinates
 mmax = size(cellseq,2);
 %     eventtree = sparse(m,1); clear m
-siz=repmat(numcells,mmax,1);
+siz=repmat(maxcell,mmax,1);  %This doesn't get used...
 
 level = mmax; % set the inital level to that of the sequence depth
 % set sequence counts to zeros
@@ -66,6 +78,7 @@ numoccurance = zeros(numseqs,1);
 firstspikepossibilities = unique(cellseq(:,1));
 firstspikeindices = find(ismember(spikesmat(:,2),firstspikepossibilities));
 for sp = firstspikeindices'
+    
     if mod(sp,10000)==0              
         timesofar = toc; percdone = sp./numspikes;
         totaltimeestimate = timesofar./percdone;
@@ -86,7 +99,7 @@ for sp = firstspikeindices'
     
     %Go to the next spike in the tree
     [ts, level_blah] = onedeeper(spikesmat,sp,...
-        sptime,alpha,ts,numcells,mmax,siz,level,...
+        sptime,alpha,ts,maxcell,mmax,siz,level,...
         keepseqs,firstsptime,chainlimit,seqnum);
 end
 
@@ -118,7 +131,7 @@ end
 %Recursive function that takes a spike index and looks at the next level of
 %spikes that fit alpha and chainlimit criteria
 function [ts, level] = onedeeper(spikesmat,sp,sptime,alpha,...
-    ts,numcells,mmax,siz,level,cellseq,firstsptime,chainlimit,seqnum)
+    ts,maxcell,mmax,siz,level,cellseq,firstsptime,chainlimit,seqnum)
 
     %Find the indices of spikes within alpha seconds (or chainlimit spikes) in the future
     timelag = spikesmat(sp+1:min(end,sp+chainlimit),1)-sptime;
@@ -146,7 +159,7 @@ function [ts, level] = onedeeper(spikesmat,sp,sptime,alpha,...
         if level > 1
             %If you're not at the end of the chain, go to the next spike in the tree
             [ts, level_blah] = onedeeper(spikesmat,sp5,...
-                sptime5,alpha,ts,numcells,mmax,siz,level,...
+                sptime5,alpha,ts,maxcell,mmax,siz,level,...
                 keepseqs5,firstsptime,chainlimit,seqnum5);
         elseif level == 1
             %If you make it to the last spike in the chain, add the first
