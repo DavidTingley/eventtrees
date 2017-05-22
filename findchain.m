@@ -4,6 +4,8 @@ function [ts,numoccurance,...
 %INPUT
 %     spiketimes    cell array where each element is the time stamps of a single
 %                   neuron
+%                  -or-[nspikes x 2] array where spiketimes(:,1) is spiketimes
+%                   and spiketimes(:,2) is cellnumber.
 %     cellseq       [nsequences x mmax] matrix of the sequences we want to
 %                   hunt for. each row is a sequence of cell numbers.
 %     alpha         time window to constrain each transition to
