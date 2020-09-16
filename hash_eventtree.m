@@ -7,6 +7,7 @@ function [tree,siz,cumulativeUIDs] = hash_eventtree(varargin)
 %   seqLength  -  length of sequences we're looking for
 %   chainLimit -  the # of spikes we can skip before giving up search (this
 %                 indirectly limits recursion depth)
+%   fileName   - 
 %
 %
 %% Output
